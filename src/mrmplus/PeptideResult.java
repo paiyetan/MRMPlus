@@ -6,6 +6,9 @@ package mrmplus;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import mrmplus.statistics.resultobjects.CurveFit;
+import mrmplus.statistics.resultobjects.LimitOfDetection;
+import mrmplus.statistics.resultobjects.LowerLimitOfQuantification;
 
 /**
  *
@@ -13,102 +16,68 @@ import java.util.LinkedList;
  */
 public class PeptideResult {
     
+    //inputs...
     private String peptideSequence;
-    private double limitOfDetection;
-    private double lowerLimitOfQuantification;
-    //Linearity linearity;
-    private double slope;
-    private double slopeStandardError;
-    private double slopeStandardErrorPercent;
-    
-    private double carryOver; //in Percentage
-    private LinkedList<PeptideTransition> transitions; 
-    private double upperLimitOfQuantification;
+    LinkedList<PeptideRecord> mappedRecords;
+    HashMap<String, String> config; 
+            
+    //outputs...
+    private LinkedList<CurveFit> curveFits;
+    private LinkedList<LimitOfDetection> limitsOfDetections;
+    private LinkedList<LowerLimitOfQuantification> lowerLimitsOfQuantifications;
     
     
     public PeptideResult(String peptideSequence, 
                     LinkedList<PeptideRecord> mappedRecords,
                         HashMap<String, String> config){
         this.peptideSequence = peptideSequence;
-        //limitOfDetection
-        //lowerLimitOfQuantification
-        //slope
-        //slopeStandardError
-        
+        this.mappedRecords = mappedRecords;
+        this.config = config;
+
     }
+    
     public PeptideResult(String peptideSequence){
         this.peptideSequence = peptideSequence;
     }
 
-    
-    public void setCarryOver(double carryOver) {
-        this.carryOver = carryOver;
+    public void setCurveFits(LinkedList<CurveFit> curveFits) {
+        this.curveFits = curveFits;
     }
 
-    public void setLimitOfDetection(double limitOfDetection) {
-        this.limitOfDetection = limitOfDetection;
+    public void setLimitsOfDetections(LinkedList<LimitOfDetection> limitsOfDetections) {
+        this.limitsOfDetections = limitsOfDetections;
     }
 
-    public void setLowerLimitOfQuantification(double lowerLimitOfQuantification) {
-        this.lowerLimitOfQuantification = lowerLimitOfQuantification;
-    }
-
-    public void setSlope(double slope) {
-        this.slope = slope;
-    }
-
-    public void setSlopeStandardError(double slopeStandardError) {
-        this.slopeStandardError = slopeStandardError;
-    }
-
-    public void setSlopeStandardErrorPercent(double slopeStandardErrorPercent) {
-        this.slopeStandardErrorPercent = slopeStandardErrorPercent;
-    }
-
-    public void setTransitions(LinkedList<PeptideTransition> transitions) {
-        this.transitions = transitions;
-    }
-
-    public void setUpperLimitOfQuantification(double upperLimitOfQuantification) {
-        this.upperLimitOfQuantification = upperLimitOfQuantification;
+    public void setLowerLimitsOfQuantifications(LinkedList<LowerLimitOfQuantification> lowerLimitsOfQuantifications) {
+        this.lowerLimitsOfQuantifications = lowerLimitsOfQuantifications;
     }
     
-    public double getCarryOver() {
-        return carryOver;
-    }
-
-    public double getLimitOfDetection() {
-        return limitOfDetection;
-    }
-
-    public double getLowerLimitOfQuantification() {
-        return lowerLimitOfQuantification;
-    }
-
     public String getPeptideSequence() {
         return peptideSequence;
     }
 
-    public double getSlope() {
-        return slope;
+    public HashMap<String, String> getConfig() {
+        return config;
     }
 
-    public double getSlopeStandardError() {
-        return slopeStandardError;
+    public LinkedList<CurveFit> getCurveFits() {
+        return curveFits;
     }
 
-    public double getSlopeStandardErrorPercent() {
-        return slopeStandardErrorPercent;
+    public LinkedList<LimitOfDetection> getLimitsOfDetections() {
+        return limitsOfDetections;
     }
 
-    public LinkedList<PeptideTransition> getTransitions() {
-        return transitions;
+    public LinkedList<LowerLimitOfQuantification> getLowerLimitsOfQuantifications() {
+        return lowerLimitsOfQuantifications;
     }
 
-    public double getUpperLimitOfQuantification() {
-        return upperLimitOfQuantification;
+    public LinkedList<PeptideRecord> getMappedRecords() {
+        return mappedRecords;
     }
     
+    
+
     
     
     

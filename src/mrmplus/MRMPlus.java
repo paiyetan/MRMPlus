@@ -29,19 +29,22 @@ public class MRMPlus {
         /*
          *  
          *  default config...
-            inputFile="./etc/data/inputFile.txt
             header=TRUE
+            inputFile=./etc/data/inputFile.txt
             peptidesMonitored=43
             noOftransitions=3
-            totalBlanks=TRUE
+            totalBlanks=9
             replicates=3
             serialDilutions=7
             computeLOD=TRUE
             computeLLOQ=TRUE
-            computeLinearity=TRUE
-            computeCarryOver=TRUE
-            computePartialValidationOfSpecificity=TRUE
-            computeULOQ=TRUE
+            fitCurve=TRUE
+            computeLinearity=FALSE
+            computeCarryOver=FALSE
+            computePartialValidationOfSpecificity=FALSE
+            computeULOQ=FALSE
+            outputDirectory=./etc/text
+            peptidesResultsOutputted=SUMMED
          * 
          */
         
