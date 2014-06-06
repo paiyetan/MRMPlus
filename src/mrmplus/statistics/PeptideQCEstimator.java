@@ -16,6 +16,13 @@ import java.util.LinkedList;
 import java.util.Set;
 import mrmplus.PeptideRecord;
 import mrmplus.PeptideResult;
+import mrmplus.MRMRunMeta;
+import ios.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import mrmplus.statistics.resultobjects.*;
+import mrmplus.enums.*;
+
 
 /**
  *
@@ -25,7 +32,7 @@ public class PeptideQCEstimator {
     
     
     public HashMap<String, PeptideResult> estimatePeptidesQCs(HashMap<String, LinkedList<PeptideRecord>> pepToRecordsMap, 
-                                                                                HashMap<String, String> config){
+                                                                                HashMap<String, String> config) throws FileNotFoundException, IOException{
         HashMap<String, PeptideResult> peptideQCEstimates = new HashMap<String, PeptideResult>();
         //instantiate peptide result object for each peptide and insert in peptideQCEstmates map...
         Set<String> peptideSequences = pepToRecordsMap.keySet();
@@ -49,8 +56,10 @@ public class PeptideQCEstimator {
          * [default] QC values in config file
             header=TRUE
             inputFile=./etc/data/inputFile.txt
+            metadataFile=./etc/data/metadata.txt
             peptidesMonitored=43
             noOftransitions=3
+            preCurveBlanks=3
             totalBlanks=9
             replicates=3
             serialDilutions=7
@@ -66,35 +75,36 @@ public class PeptideQCEstimator {
          * 
          */
         
+        
+        
         // ************************ //
         // *** Defaults to TRUE ***
         // ************************ //
         //Limit of Detection.
         if(config.get("computeLOD").equalsIgnoreCase("TRUE")){
             PeptideLODEstimator lODEstimator = new PeptideLODEstimator();
-            
+            LinkedList<LimitOfDetection> lods = null;
             // for each of the peptide sequence
             for(String peptideSequence : peptideSequences){
                 // get instantiated PeptideResult object [place holder for derived results]
                 PeptideResult peptideResult = peptideQCEstimates.get(peptideSequence);
                 // get associated PeptideRecords...
                 LinkedList<PeptideRecord> peptideRecords = pepToRecordsMap.get(peptideSequence);
-                
-                
                 // determine peptidesResultsOutputted
                 if(config.get("peptidesResultsOutputted").equalsIgnoreCase("SUMMED")){
-                    // compute summed...
-                    
+                    // compute summed LOD...
+                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.SUMMED, config);                    
                 } else if(config.get("peptidesResultsOutputted").equalsIgnoreCase("TRANSITIONS")){
                     // compute for each transitions
-                    
+                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.TRANSITIONS, config);
                 } else {
                     // compute for both summed and transitions...
+                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.BOTH, config);
                 }
-                
-                //set LOD(s) for peptide...
-                
+                //set LOD(s) for peptide result...
+                peptideResult.setLimitsOfDetections(lods);
                 //remove and re-insert peptideToPeptideResult mapping... 
+                
             }
         }
         //Lower Limit of Quantitation.
@@ -276,5 +286,7 @@ public class PeptideQCEstimator {
         
         return peptideQCEstimates;
     }
+
+    
     
 }

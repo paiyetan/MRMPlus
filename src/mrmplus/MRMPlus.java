@@ -60,6 +60,34 @@ public class MRMPlus {
         String inputFile = config.get("inputFile"); //can be alternative derived 
         peptideRecords = inFileReader.readInputFile(inputFile, config);
         
+        //read metadata file...
+        
+        
+        //associate metadata-info with peptide records
+        // Get associated information - metadata...
+        String metadataFile = config.get("metadataFile");
+        MetadataFileReader metadataFileReader = new MetadataFileReader();
+        LinkedList<MRMRunMeta> metadata = metadataFileReader.readFile(metadataFile);
+        
+        // map replicate name to meta-info; the replicate name is used in this case because it is unique and could
+        // be used to associate metadata to peptide record as we'll use subsequently...
+        ExperimentMetadataMapper metadatamapper = new ExperimentMetadataMapper();
+        HashMap<String, MRMRunMeta> replicateNameToMetadataMap = 
+                metadatamapper.mapReplicateNameToMetadata(metadata);
+        
+        // update peptideRecords with metadata info...
+        PeptideRecordsUpdater updater = new PeptideRecordsUpdater();
+        updater.updatePeptideRecords(peptideRecords, replicateNameToMetadataMap);
+        
+        // get associated [spikedIn] serial dilution concentration...
+        String dilutionFile = config.get("dilutionFile");
+        DilutionFileReader dilFileReader = new DilutionFileReader();
+        HashMap<String, Double> pointToDilutionMap = dilFileReader.readFile(dilutionFile);
+        
+        // update respective peptideRecord with associated point dilution
+        updater.updatePeptideRecordsDilutions(peptideRecords, pointToDilutionMap);
+        
+        
         //map peptides to records...
         PeptideToRecordsMapper mapper = new PeptideToRecordsMapper();
         pepToRecordsMap = mapper.mapPeptideToRecord(peptideRecords);
@@ -76,4 +104,7 @@ public class MRMPlus {
         
         
     }
+    
+    
+    
 }

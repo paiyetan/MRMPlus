@@ -2,14 +2,14 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mrmplus.statistics.estimators;
+package mrmplus.enums;
 
 /**
  *
  * @author paiyeta1
  */
-public class PeptideLLOQEstimator {
-    
-    
-    
+public enum PeptideResultOutputType {
+    SUMMED,
+    TRANSITIONS,
+    BOTH
 }

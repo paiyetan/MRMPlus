@@ -30,6 +30,7 @@ public class PeptideRecord {
      * 
      * 
      */
+    //initiation values(s)
     private String PeptideSequence;	
     private String ReplicateName;	
     private int PrecursorCharge;	
@@ -43,6 +44,19 @@ public class PeptideRecord {
     private double heavyProductMz;	
     private double heavyRetentionTime;	
     private double heavyArea;
+    
+    //derived value(s)
+    private double peakAreaRatio;
+    
+    //values from metadata file
+    private String RunOrder;	
+    private String AnalyteType;	
+    private String Replicate;	
+    private String CalibrationPoint;
+    
+    //values from dilution file.
+    private double dilution = 0; // typically equivalent to the spikedInConcenteration
+                                 // should the peptide record not be a blank, it'll be updated by the setDilution method call.
 
     public PeptideRecord(String PeptideSequence, 
                             String ReplicateName, 
@@ -70,6 +84,8 @@ public class PeptideRecord {
         this.heavyProductMz = heavyProductMz;
         this.heavyRetentionTime = heavyRetentionTime;
         this.heavyArea = heavyArea;
+        
+        setPeakAreaRatio();
     }
 
     public String getFragmentIon() {
@@ -139,5 +155,74 @@ public class PeptideRecord {
         replicateNumber = Integer.parseInt(strArr[1]);            
         return replicateNumber;
     }
+
+    private void setPeakAreaRatio() {
+        //throw new UnsupportedOperationException("Not yet implemented");
+        this.peakAreaRatio = this.heavyArea /this.lightArea;
+    }
+    
+    public double getPeakAreaRatio(){
+        return this.peakAreaRatio;
+    }
+    
+    public double getMeasuredConcentration(double spikedInConcentration){
+        double measuredConc = this.getPeakAreaRatio() * spikedInConcentration;
+        return measuredConc;
+    }
+    
+    //alternately 
+    public double getMeasuredConcentration(){
+        //peak ratio * spikedInConcetration...
+        double measuredConc = peakAreaRatio * dilution;
+        return measuredConc;       
+    }
+
+    // set from metadata info....
+    public void setAnalyteType(String AnalyteType) {
+        this.AnalyteType = AnalyteType;
+    }
+
+    public void setCalibrationPoint(String CalibrationPoint) {
+        this.CalibrationPoint = CalibrationPoint;
+    }
+
+    public void setReplicate(String Replicate) {
+        this.Replicate = Replicate;
+    }
+
+    public void setRunOrder(String RunOrder) {
+        this.RunOrder = RunOrder;
+    }
+
+    public String getAnalyteType() {
+        return AnalyteType;
+    }
+
+    public String getCalibrationPoint() {
+        return CalibrationPoint;
+    }
+
+    public String getReplicate() {
+        return Replicate;
+    }
+
+    public String getRunOrder() {
+        return RunOrder;
+    }
+    
+    // from dilution file
+    public void setDilution(double dilution) {
+        this.dilution = dilution;
+    }
+
+    public double getDilution() {
+        return dilution;
+    }
+    
+    
+    
+    
+    
+    
     
 }
