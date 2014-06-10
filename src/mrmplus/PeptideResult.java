@@ -18,6 +18,7 @@ public class PeptideResult {
     
     //inputs...
     private String peptideSequence;
+    //private 
     LinkedList<PeptideRecord> mappedRecords;
     HashMap<String, String> config; 
             

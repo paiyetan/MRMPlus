@@ -13,7 +13,7 @@ public class LimitOfDetection {
     private String transitionID; // could be summed (summation of all transitions associated with peptide sequence) or 
                                  // respectively one of the many number of transitions monitored per peptide.
     
-    // site defined values...
+    // CPTAC MARMAssay development group site defined values...
     private double blankOnly;
     private double blankPlusLowConc;
     private double rsdLimit;
@@ -23,6 +23,7 @@ public class LimitOfDetection {
     private double standardDeviation;
     private double limitOfDetection;
     private boolean usedMinSpikedInConcentration;
+    private boolean zeroValueFlag;
 
     /**
      * 
@@ -56,6 +57,28 @@ public class LimitOfDetection {
         //this.usedMinSpikedInConcentration = usedMinSpikedInConcentration;       
     }
     
+    public LimitOfDetection(double average, double sd, double lod, boolean zeroFlagged){
+        //this.transitionID = transitionID;
+        this.average = average;
+        this.standardDeviation = sd;
+        this.limitOfDetection = lod;
+        this.zeroValueFlag = zeroFlagged;       
+    }
+    
+    public void setUsedMinSpikedInConcentration(boolean use){
+        usedMinSpikedInConcentration = use;
+    }
+
+    public void setTransitionID(String transitionID) {
+        this.transitionID = transitionID;
+    }
+
+    
+    public void setZeroValueFlag(boolean zeroValueFlag) {
+        this.zeroValueFlag = zeroValueFlag;
+    }
+    
+    
     
 
     public double getBlankOnly() {
@@ -85,22 +108,16 @@ public class LimitOfDetection {
     public double getStandardDeviation() {
         return standardDeviation;
     }
+    
+    
 
     public boolean usedMinSpikedInConcentration() {
         return usedMinSpikedInConcentration;
     }
     
-    public void setUsedMinSpikedInConcentration(boolean use){
-        usedMinSpikedInConcentration = use;
-    }
-
-    public void setTransitionID(String transitionID) {
-        this.transitionID = transitionID;
-    }
-    
-    
-    
-    
+    public boolean isZeroValueFlagged() {
+        return zeroValueFlag;
+    } 
     
     
 }

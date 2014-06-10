@@ -140,6 +140,9 @@ public class PeptideLODEstimator {
         for(int i = 0; i < values.length; i++){
             values[i] = preFirstCurveBlanks.get(i).getMeasuredConcentration();
         }
+        
+        boolean hasZeroValue = hasZeroValue(values);       
+        
         //evaluate mean
         Mean mean = new Mean();
         double average = mean.evaluate(values);
@@ -149,7 +152,7 @@ public class PeptideLODEstimator {
         
         //lod
         double lodValue = (average + (sdvalue * 3));
-        lod = new LimitOfDetection(average,sdvalue,lodValue);
+        lod = new LimitOfDetection(average,sdvalue,lodValue, hasZeroValue);
         return lod;
     }
 
@@ -162,6 +165,19 @@ public class PeptideLODEstimator {
             }
         }
         return lowestSpikedSampleRecords;
+    }
+
+    private boolean hasZeroValue(double[] values) {
+        //throw new UnsupportedOperationException("Not yet implemented");
+        boolean hasZero = false;
+        for(double value : values){
+            if(value == 0){
+                hasZero = true;
+                break;
+            }
+        }
+        
+        return hasZero;
     }
 
     
