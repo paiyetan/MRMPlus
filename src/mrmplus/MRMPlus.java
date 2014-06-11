@@ -52,10 +52,12 @@ public class MRMPlus {
         HashMap<String, LinkedList<PeptideRecord>> pepToRecordsMap;
         
         //read configuration(s)...
+        System.out.println("Reading configuration file...");
         ConfigurationReader configReader = new ConfigurationReader();
         HashMap<String, String> config = configReader.readConfig("./MRMPlus.config");
         
         //read inputFile...
+        System.out.println("Reading 'skyline' preprocessed data input file...");
         InputFileReader inFileReader = new InputFileReader();
         String inputFile = config.get("inputFile"); //can be alternative derived 
         peptideRecords = inFileReader.readInputFile(inputFile, config);
@@ -65,34 +67,41 @@ public class MRMPlus {
         
         //associate metadata-info with peptide records
         // Get associated information - metadata...
+        System.out.println("Reading metadata file...");
         String metadataFile = config.get("metadataFile");
         MetadataFileReader metadataFileReader = new MetadataFileReader();
         LinkedList<MRMRunMeta> metadata = metadataFileReader.readFile(metadataFile);
         
         // map replicate name to meta-info; the replicate name is used in this case because it is unique and could
         // be used to associate metadata to peptide record as we'll use subsequently...
+        System.out.println("Mapping runs to metadata-specified replicates...");
         ExperimentMetadataMapper metadatamapper = new ExperimentMetadataMapper();
         HashMap<String, MRMRunMeta> replicateNameToMetadataMap = 
                 metadatamapper.mapReplicateNameToMetadata(metadata);
         
         // update peptideRecords with metadata info...
+        System.out.println("Updating peptide records...");
         PeptideRecordsUpdater updater = new PeptideRecordsUpdater();
         updater.updatePeptideRecords(peptideRecords, replicateNameToMetadataMap);
         
         // get associated [spikedIn] serial dilution concentration...
+        System.out.println("Reading dilution file...");
         String dilutionFile = config.get("dilutionFile");
         DilutionFileReader dilFileReader = new DilutionFileReader();
         HashMap<String, Double> pointToDilutionMap = dilFileReader.readFile(dilutionFile);
         
         // update respective peptideRecord with associated point dilution
+        System.out.println("Updating peptide records...");
         updater.updatePeptideRecordsDilutions(peptideRecords, pointToDilutionMap);
         
         
         //map peptides to records...
+        System.out.println("Mapping peptide sequence to peptide record...");
         PeptideToRecordsMapper mapper = new PeptideToRecordsMapper();
         pepToRecordsMap = mapper.mapPeptideToRecord(peptideRecords);
         
         //compute statistics results...
+        System.out.println("Estimating MRMPlus QCs...");
         PeptideQCEstimator qcEstimator = new PeptideQCEstimator();
         HashMap<String, PeptideResult> peptideQCEstimates = 
                 qcEstimator.estimatePeptidesQCs(pepToRecordsMap, config);
@@ -101,6 +110,7 @@ public class MRMPlus {
         QCEstimatesPrinter printer = new QCEstimatesPrinter();
         printer.printMRMPlusEstimates(peptideQCEstimates, config);
         
+        System.out.println("...Done!!!");
         
         
     }

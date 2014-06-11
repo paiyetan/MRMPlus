@@ -35,6 +35,7 @@ public class PeptideQCEstimator {
                                                                                 HashMap<String, String> config) throws FileNotFoundException, IOException{
         HashMap<String, PeptideResult> peptideQCEstimates = new HashMap<String, PeptideResult>();
         //instantiate peptide result object for each peptide and insert in peptideQCEstmates map...
+        System.out.println(" Instantiating output peptide result object(s)...");
         Set<String> peptideSequences = pepToRecordsMap.keySet();
         for(String peptideSequence : peptideSequences){
             peptideQCEstimates.put(peptideSequence, new PeptideResult(peptideSequence));
@@ -81,6 +82,7 @@ public class PeptideQCEstimator {
         // *** Defaults to TRUE ***
         // ************************ //
         //Limit of Detection.
+        System.out.println(" Estimating Limit of Detection(s)...");
         if(config.get("computeLOD").equalsIgnoreCase("TRUE")){
             PeptideLODEstimator lODEstimator = new PeptideLODEstimator();
             LinkedList<LimitOfDetection> lods = null;
@@ -108,7 +110,9 @@ public class PeptideQCEstimator {
             }
         }
         //Lower Limit of Quantitation.
+        
         if(config.get("computeLLOQ").equalsIgnoreCase("TRUE")){
+            System.out.println(" Estimating Lower Limit of Quantitation(s)...");
             PeptideLLOQEstimator lLOQEstimator = new PeptideLLOQEstimator();
             
             // for each of the peptide sequence
@@ -139,6 +143,7 @@ public class PeptideQCEstimator {
         
         //Fit Curve...
         if(config.get("fitCurve").equalsIgnoreCase("TRUE")){
+            System.out.println(" Fitting Curve(s)...");
             PeptideResponseCurveFitter curveFitter = new PeptideResponseCurveFitter();
             
             // for each of the peptide sequence
@@ -171,6 +176,7 @@ public class PeptideQCEstimator {
         // ************************* //
         //Estimate Upper Limit of Quantitation.
         if(config.get("computeULOQ").equalsIgnoreCase("TRUE")){
+            System.out.println(" Estimating Upper Limit of Quantitation...");
             PeptideULOQEstimator uLOQEstimator = new PeptideULOQEstimator();
             
             // for each of the peptide sequence
@@ -201,6 +207,7 @@ public class PeptideQCEstimator {
         
         //Estimate Linearity.
         if(config.get("computeLinearity").equalsIgnoreCase("TRUE")){
+            System.out.println(" Computing Linearity...");
             PeptideLinearityEstimator lEstimator = new PeptideLinearityEstimator();
             
             // for each of the peptide sequence
@@ -229,6 +236,7 @@ public class PeptideQCEstimator {
         }
         //Estimate Carry-Over.
         if(config.get("computeCarryOver").equalsIgnoreCase("TRUE")){
+            System.out.println(" Computing carry-over...");
             PeptideCarryOverEstimator cOEstimator = new PeptideCarryOverEstimator();
             
             // for each of the peptide sequence
@@ -257,6 +265,7 @@ public class PeptideQCEstimator {
         }
         //Partially validate Specificity.
         if(config.get("computePartialValidationOfSpecificity").equalsIgnoreCase("TRUE")){
+            System.out.println(" Partially validating specificity...");
             PeptideSpecValidator specValidator = new PeptideSpecValidator();
             
             // for each of the peptide sequence
