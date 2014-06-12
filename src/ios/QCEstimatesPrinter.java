@@ -19,7 +19,7 @@ import mrmplus.statistics.resultobjects.LimitOfDetection;
  */
 public class QCEstimatesPrinter {
 
-    public void printMRMPlusEstimates(HashMap<String, PeptideResult> peptideQCEstimates, 
+    public void printMRMPlusEstimates(HashMap<String, LinkedList<PeptideResult>> peptideQCEstimates, 
             HashMap<String, String> config) throws FileNotFoundException {
         //throw new UnsupportedOperationException("Not yet implemented");
         String inputFile = config.get("inputFile");
@@ -32,13 +32,11 @@ public class QCEstimatesPrinter {
         //print body
         Set<String> peptideSequences = peptideQCEstimates.keySet();
         for(String peptideSequence : peptideSequences){
-            PeptideResult peptideResult = peptideQCEstimates.get(peptideSequence);
-            printPeptideRowResult(peptideResult, printer, config);
-        }
-        
-               
-        
-        
+            LinkedList<PeptideResult> peptideResults = peptideQCEstimates.get(peptideSequence);
+            for(PeptideResult peptideResult : peptideResults){
+                printPeptideRowResult(peptideResult, printer, config);
+            }
+        }      
         
         printer.close();
     }
@@ -94,27 +92,29 @@ public class QCEstimatesPrinter {
 
     private void printPeptideRowResult(PeptideResult peptideResult, PrintWriter printer, HashMap<String, String> config) {
         
+         printer.print(peptideResult.getPeptideSequence() + "\t" + 
+                       peptideResult.getTransitionID());
         // ************************ //
         // *** Defaults to TRUE ***
         // ************************ //
         //Limit of Detection.
         if(config.get("computeLOD").equalsIgnoreCase("TRUE")){
             
-            LinkedList<LimitOfDetection> lods = peptideResult.getLimitsOfDetections();
+            LimitOfDetection lod = peptideResult.getLimitOfDetection();
             
-            for(LimitOfDetection lod : lods){
+            //for(LimitOfDetection lod : lods){
                 // based off configuration file options...
-                printer.print(peptideResult.getPeptideSequence());// + "\t" + "Transition");
+               
         
                 
                 // locally defined values...
-                printer.print("\t" + lod.getTransitionID()); // "transition type"
+                //printer.print("\t" + lod.getTransitionID()); // "transition type"
                 printer.print("\t" + lod.getAverage()); // "average");
                 printer.print("\t" + lod.getStandardDeviation()); //"standardDeviation");
                 printer.print("\t" + lod.getLimitOfDetection()); //"limitOfDetectionValue");
                 printer.print("\t" + lod.usedMinSpikedInConcentration()); //"usedMinSpikedInConcentration");
                 printer.print("\t" + lod.isZeroValueFlagged()); //"zeroFlagged");
-            }
+            //}
         }
         //Lower Limit of Quantitation.
         if(config.get("computeLLOQ").equalsIgnoreCase("TRUE")){

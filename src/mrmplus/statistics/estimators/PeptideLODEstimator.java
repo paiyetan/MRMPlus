@@ -21,7 +21,9 @@ import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
  */
 public class PeptideLODEstimator {
 
-    public LinkedList<LimitOfDetection> estimateLOD(LinkedList<PeptideRecord> peptideRecords, 
+    public LinkedList<LimitOfDetection> estimateLOD(
+                                                    //LinkedList<PeptideResult> peptideResults,
+                                                    LinkedList<PeptideRecord> peptideRecords, 
                                                     PeptideResultOutputType peptideResultOutputType,
                                                     HashMap<String, String> config) {
         //throw new UnsupportedOperationException("Not yet implemented");

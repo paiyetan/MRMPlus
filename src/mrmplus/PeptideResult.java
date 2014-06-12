@@ -19,15 +19,20 @@ public class PeptideResult {
     //inputs...
     private String peptideSequence;
     //private 
-    LinkedList<PeptideRecord> mappedRecords;
-    HashMap<String, String> config; 
-            
+    private LinkedList<PeptideRecord> mappedRecords;
+    private HashMap<String, String> config;
+    
     //outputs...
     private LinkedList<CurveFit> curveFits;
     private LinkedList<LimitOfDetection> limitsOfDetections;
     private LinkedList<LowerLimitOfQuantification> lowerLimitsOfQuantifications;
-    
-    
+        
+    //Updated outputs
+    private String transitionID;
+    private CurveFit curveFit;
+    private LimitOfDetection limitOfDetection;
+    private LowerLimitOfQuantification lowerLimitOfQuantification;
+               
     public PeptideResult(String peptideSequence, 
                     LinkedList<PeptideRecord> mappedRecords,
                         HashMap<String, String> config){
@@ -76,6 +81,40 @@ public class PeptideResult {
     public LinkedList<PeptideRecord> getMappedRecords() {
         return mappedRecords;
     }
+
+    public void setTransitionID(String transitionID) {
+        this.transitionID = transitionID;
+    }
+
+    public void setCurveFit(CurveFit curveFit) {
+        this.curveFit = curveFit;
+    }
+
+    public void setLimitOfDetection(LimitOfDetection limitOfDetection) {
+        this.limitOfDetection = limitOfDetection;
+    }
+
+    public void setLowerLimitOfQuantification(LowerLimitOfQuantification lowerLimitOfQuantification) {
+        this.lowerLimitOfQuantification = lowerLimitOfQuantification;
+    }
+
+    public CurveFit getCurveFit() {
+        return curveFit;
+    }
+
+    public LimitOfDetection getLimitOfDetection() {
+        return limitOfDetection;
+    }
+
+    public LowerLimitOfQuantification getLowerLimitOfQuantification() {
+        return lowerLimitOfQuantification;
+    }
+
+    public String getTransitionID() {
+        return transitionID;
+    }
+    
+    
     
     
 

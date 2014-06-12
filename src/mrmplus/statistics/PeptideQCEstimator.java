@@ -31,15 +31,17 @@ import mrmplus.enums.*;
 public class PeptideQCEstimator {
     
     
-    public HashMap<String, PeptideResult> estimatePeptidesQCs(HashMap<String, LinkedList<PeptideRecord>> pepToRecordsMap, 
+    public HashMap<String, LinkedList<PeptideResult>> estimatePeptidesQCs(HashMap<String, LinkedList<PeptideRecord>> pepToRecordsMap, 
                                                                                 HashMap<String, String> config) throws FileNotFoundException, IOException{
-        HashMap<String, PeptideResult> peptideQCEstimates = new HashMap<String, PeptideResult>();
+        HashMap<String, LinkedList<PeptideResult>> peptideQCEstimates = new HashMap<String, LinkedList<PeptideResult>>();
         //instantiate peptide result object for each peptide and insert in peptideQCEstmates map...
         System.out.println(" Instantiating output peptide result object(s)...");
         Set<String> peptideSequences = pepToRecordsMap.keySet();
         for(String peptideSequence : peptideSequences){
-            peptideQCEstimates.put(peptideSequence, new PeptideResult(peptideSequence));
+            peptideQCEstimates.put(peptideSequence, new LinkedList<PeptideResult>());
         }
+        
+        
         /*
          * QC values to estimate 
          *  double limitOfDetection;
@@ -88,25 +90,56 @@ public class PeptideQCEstimator {
             LinkedList<LimitOfDetection> lods = null;
             // for each of the peptide sequence
             for(String peptideSequence : peptideSequences){
-                // get instantiated PeptideResult object [place holder for derived results]
-                PeptideResult peptideResult = peptideQCEstimates.get(peptideSequence);
+                // get instantiated object [place holder for derived results]
+                LinkedList<PeptideResult> peptideResults = peptideQCEstimates.remove(peptideSequence);
                 // get associated PeptideRecords...
                 LinkedList<PeptideRecord> peptideRecords = pepToRecordsMap.get(peptideSequence);
                 // determine peptidesResultsOutputted
                 if(config.get("peptidesResultsOutputted").equalsIgnoreCase("SUMMED")){
                     // compute summed LOD...
-                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.SUMMED, config);                    
+                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.SUMMED, config); 
+                    //lODEstimator.estimateLOD(peptideResults, peptideRecords, PeptideResultOutputType.SUMMED, config); 
                 } else if(config.get("peptidesResultsOutputted").equalsIgnoreCase("TRANSITIONS")){
                     // compute for each transitions
                     lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.TRANSITIONS, config);
+                    //lODEstimator.estimateLOD(peptideResults, peptideRecords, PeptideResultOutputType.TRANSITIONS, config);
                 } else {
                     // compute for both summed and transitions...
                     lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.BOTH, config);
+                    //lODEstimator.estimateLOD(peptideResults, peptideRecords, PeptideResultOutputType.BOTH, config);
                 }
-                //set LOD(s) for peptide result...
-                peptideResult.setLimitsOfDetections(lods);
-                //remove and re-insert peptideToPeptideResult mapping... 
                 
+                //peptideResult.setLimitsOfDetections(lods);
+                if(peptideResults.size()==0){
+                    for(int i = 0; i < lods.size(); i++){
+                        PeptideResult peptideResult = new PeptideResult(peptideSequence);
+                        peptideResult.setTransitionID(lods.get(i).getTransitionID());
+                        peptideResult.setLimitOfDetection(lods.get(i));
+                        peptideResults.add(peptideResult);
+                    }
+                }else{
+                    if(peptideResults.size()!=lods.size()){
+                        try{
+                            throw new Exception(); 
+                        }catch(Exception ex){
+                            ex.printStackTrace();
+                            System.out.println("ERROR: mapped peptideResults linked list size do not match computed number of LODs");
+                        }
+                    }else{
+                        //for each lod
+                        for(LimitOfDetection lod : lods){
+                            //find peptideResult with same transitionID
+                            String transitionID = lod.getTransitionID();
+                            for(int i = 0; i < peptideResults.size(); i++){
+                                if(transitionID.equalsIgnoreCase(peptideResults.get(i).getTransitionID())){
+                                    peptideResults.get(i).setLimitOfDetection(lod);
+                                }
+                            }
+                        }
+                    }
+                }
+                //remove and re-insert peptideToPeptideResult mapping... 
+                peptideQCEstimates.put(peptideSequence, peptideResults);
             }
         }
         //Lower Limit of Quantitation.
@@ -118,7 +151,7 @@ public class PeptideQCEstimator {
             // for each of the peptide sequence
             for(String peptideSequence : peptideSequences){
                 // get instantiated PeptideResult object [place holder for derived results]
-                PeptideResult peptideResult = peptideQCEstimates.get(peptideSequence);
+                LinkedList<PeptideResult> peptideResults = peptideQCEstimates.get(peptideSequence);
                 // get associated PeptideRecords...
                 LinkedList<PeptideRecord> peptideRecords = pepToRecordsMap.get(peptideSequence);
                 
@@ -149,7 +182,7 @@ public class PeptideQCEstimator {
             // for each of the peptide sequence
             for(String peptideSequence : peptideSequences){
                 // get instantiated PeptideResult object [place holder for derived results]
-                PeptideResult peptideResult = peptideQCEstimates.get(peptideSequence);
+                LinkedList<PeptideResult> peptideResults = peptideQCEstimates.get(peptideSequence);
                 // get associated PeptideRecords...
                 LinkedList<PeptideRecord> peptideRecords = pepToRecordsMap.get(peptideSequence);
                 
@@ -182,7 +215,7 @@ public class PeptideQCEstimator {
             // for each of the peptide sequence
             for(String peptideSequence : peptideSequences){
                 // get instantiated PeptideResult object [place holder for derived results]
-                PeptideResult peptideResult = peptideQCEstimates.get(peptideSequence);
+                LinkedList<PeptideResult> peptideResults = peptideQCEstimates.get(peptideSequence);
                 // get associated PeptideRecords...
                 LinkedList<PeptideRecord> peptideRecords = pepToRecordsMap.get(peptideSequence);
                 
@@ -213,7 +246,7 @@ public class PeptideQCEstimator {
             // for each of the peptide sequence
             for(String peptideSequence : peptideSequences){
                 // get instantiated PeptideResult object [place holder for derived results]
-                PeptideResult peptideResult = peptideQCEstimates.get(peptideSequence);
+                LinkedList<PeptideResult> peptideResults = peptideQCEstimates.get(peptideSequence);
                 // get associated PeptideRecords...
                 LinkedList<PeptideRecord> peptideRecords = pepToRecordsMap.get(peptideSequence);
                 
@@ -242,7 +275,7 @@ public class PeptideQCEstimator {
             // for each of the peptide sequence
             for(String peptideSequence : peptideSequences){
                 // get instantiated PeptideResult object [place holder for derived results]
-                PeptideResult peptideResult = peptideQCEstimates.get(peptideSequence);
+                LinkedList<PeptideResult> peptideResults = peptideQCEstimates.get(peptideSequence);
                 // get associated PeptideRecords...
                 LinkedList<PeptideRecord> peptideRecords = pepToRecordsMap.get(peptideSequence);
                 
@@ -271,7 +304,7 @@ public class PeptideQCEstimator {
             // for each of the peptide sequence
             for(String peptideSequence : peptideSequences){
                 // get instantiated PeptideResult object [place holder for derived results]
-                PeptideResult peptideResult = peptideQCEstimates.get(peptideSequence);
+                LinkedList<PeptideResult> peptideResults = peptideQCEstimates.get(peptideSequence);
                 // get associated PeptideRecords...
                 LinkedList<PeptideRecord> peptideRecords = pepToRecordsMap.get(peptideSequence);
                 

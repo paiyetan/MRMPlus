@@ -59,7 +59,7 @@ public class InputFileReader {
             }
             if(lines_read != 1){
                 rowIndex++;
-                if(rowIndex++ <= dataRows){
+                if(rowIndex <= dataRows){
                     String[] lineContent = line.split("\\t");
                     String PeptideSequence = lineContent[getAttributeIndex(fileAttrIndeces,"PeptideSequence")];	
                     String ReplicateName = lineContent[getAttributeIndex(fileAttrIndeces,"ReplicateName")];	
@@ -80,6 +80,8 @@ public class InputFileReader {
                                                                 lightProductMz, lightRetentionTime, lightArea,
                                                                     heavyPrecursorMz, heavyProductMz, heavyRetentionTime,
                                                                         heavyArea));
+                    if((rowIndex % 500) == 0)
+                        System.out.println("  " + rowIndex + " peptide records read...");
                 }
             }
         }
