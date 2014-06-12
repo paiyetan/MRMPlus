@@ -54,6 +54,7 @@ public class PeptideLODEstimator {
                         LinkedList<PeptideRecord> lowestSpikedSampleRecords = getLowestSpikedSampleRecords(transitionRecords);
                         transitionLOD = computeLOD(lowestSpikedSampleRecords);
                         transitionLOD.setUsedMinSpikedInConcentration(true);
+                        transitionLOD.setTransitionID(transition);
                     }
                     
                     /*
@@ -94,6 +95,7 @@ public class PeptideLODEstimator {
                     LinkedList<PeptideRecord> lowestSpikedSampleRecords = getLowestSpikedSampleRecords(peptideRecords);
                     summedLOD = computeLOD(lowestSpikedSampleRecords);
                     summedLOD.setUsedMinSpikedInConcentration(true);
+                    summedLOD.setTransitionID("SUMMED");
                 }
                 
                 lods.add(summedLOD);
