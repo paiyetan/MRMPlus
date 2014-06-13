@@ -28,6 +28,7 @@ public class PeptideLODEstimator {
                                                     //LinkedList<PeptideResult> peptideResults,
                                                     LinkedList<PeptideRecord> peptideRecords, 
                                                     PeptideResultOutputType peptideResultOutputType,
+                                                    HashMap<String, Double> pointToDilutionMap,
                                                     HashMap<String, String> config) throws FileNotFoundException, IOException {
         //throw new UnsupportedOperationException("Not yet implemented");
         LinkedList<LimitOfDetection> lods = new LinkedList<LimitOfDetection>();
@@ -89,7 +90,7 @@ public class PeptideLODEstimator {
                 LimitOfDetection summedLOD;
                 LinkedList<PeptideRecord> summedTransitionsDerivedPeptideRecords = 
                         sumEachReplicateRunTransitions(preFirstCurveBlanks, 
-                                                           PeptideRecordsType.PRECURVEBLANKS, config);
+                                                           PeptideRecordsType.PRECURVEBLANKS, pointToDilutionMap, config);
                 summedLOD = computeLOD(summedTransitionsDerivedPeptideRecords);
                 // update attributes
                 summedLOD.setUsedMinSpikedInConcentration(false);
@@ -100,7 +101,8 @@ public class PeptideLODEstimator {
                     //use standard deviation of signal observed/detected in lowest spiked sample 
                     LinkedList<PeptideRecord> lowestSpikedSampleRecords = getLowestSpikedSampleRecords(peptideRecords);
                     summedTransitionsDerivedPeptideRecords = 
-                        sumEachReplicateRunTransitions(lowestSpikedSampleRecords, PeptideRecordsType.MINSPIKEDCONCENTRATION, config);
+                        sumEachReplicateRunTransitions(lowestSpikedSampleRecords, 
+                                                PeptideRecordsType.MINSPIKEDCONCENTRATION, pointToDilutionMap, config);
                     summedLOD = computeLOD(summedTransitionsDerivedPeptideRecords);
                     summedLOD.setUsedMinSpikedInConcentration(true);
                     summedLOD.setTransitionID("SUMMED");
@@ -113,14 +115,14 @@ public class PeptideLODEstimator {
             default: // BOTH
                 // estimate LOD per transition...
                 LinkedList<LimitOfDetection> transitionsLODs = 
-                        estimateLOD(peptideRecords, PeptideResultOutputType.TRANSITIONS, config);
+                        estimateLOD(peptideRecords, PeptideResultOutputType.TRANSITIONS, pointToDilutionMap, config);
                 // add estimated transition-lods to lods
                 for(LimitOfDetection transitionLOD : transitionsLODs){
                     lods.add(transitionLOD);
                 }                
                 // estimate summed lod...
                 LinkedList<LimitOfDetection> summedLODs = 
-                        estimateLOD(peptideRecords, PeptideResultOutputType.SUMMED, config);
+                        estimateLOD(peptideRecords, PeptideResultOutputType.SUMMED, pointToDilutionMap, config);
                 // add summed-lod to lods 
                 for(LimitOfDetection sumLOD : summedLODs){
                     lods.add(sumLOD);
@@ -202,6 +204,7 @@ public class PeptideLODEstimator {
      */
     private LinkedList<PeptideRecord> sumEachReplicateRunTransitions(LinkedList<PeptideRecord> peptideRecords,
                                                                         PeptideRecordsType pRecType,
+                                                                        HashMap<String, Double> pointToDilutionMap,
                                                                         HashMap<String,String> config) throws FileNotFoundException, IOException {
         //throw new UnsupportedOperationException("Not yet implemented");
         LinkedList<PeptideRecord> summedReplicateRunTransitions = new LinkedList<PeptideRecord>();
@@ -262,9 +265,6 @@ public class PeptideLODEstimator {
                     PeptideRecord replicateSummedPeptideRecord = sprs.sumPeptideRecords(replicateMappedPeptideRecords);
                     //update other summed Peptide attributes...
                     //set dilution
-                    //read dilution values and extract calibration point_1
-                    DilutionFileReader dilReader = new DilutionFileReader();
-                    HashMap<String, Double> pointToDilutionMap = dilReader.readFile(config.get("dilutionFile"));
                     replicateSummedPeptideRecord.setDilution(pointToDilutionMap.get("Point_1")); //minimum_spikedIn concentration.
                     //...
                     summedReplicateRunTransitions.add(replicateSummedPeptideRecord);

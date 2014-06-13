@@ -31,7 +31,8 @@ import mrmplus.enums.*;
 public class PeptideQCEstimator {
     
     
-    public HashMap<String, LinkedList<PeptideResult>> estimatePeptidesQCs(HashMap<String, LinkedList<PeptideRecord>> pepToRecordsMap, 
+    public HashMap<String, LinkedList<PeptideResult>> estimatePeptidesQCs(HashMap<String, LinkedList<PeptideRecord>> pepToRecordsMap,
+                                                                            HashMap<String, Double> pointToDilutionMap,
                                                                                 HashMap<String, String> config) throws FileNotFoundException, IOException{
         HashMap<String, LinkedList<PeptideResult>> peptideQCEstimates = new HashMap<String, LinkedList<PeptideResult>>();
         //instantiate peptide result object for each peptide and insert in peptideQCEstmates map...
@@ -97,15 +98,15 @@ public class PeptideQCEstimator {
                 // determine peptidesResultsOutputted
                 if(config.get("peptidesResultsOutputted").equalsIgnoreCase("SUMMED")){
                     // compute summed LOD...
-                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.SUMMED, config); 
+                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.SUMMED, pointToDilutionMap, config); 
                     //lODEstimator.estimateLOD(peptideResults, peptideRecords, PeptideResultOutputType.SUMMED, config); 
                 } else if(config.get("peptidesResultsOutputted").equalsIgnoreCase("TRANSITIONS")){
                     // compute for each transitions
-                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.TRANSITIONS, config);
+                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.TRANSITIONS, pointToDilutionMap, config);
                     //lODEstimator.estimateLOD(peptideResults, peptideRecords, PeptideResultOutputType.TRANSITIONS, config);
                 } else {
                     // compute for both summed and transitions...
-                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.BOTH, config);
+                    lods = lODEstimator.estimateLOD(peptideRecords, PeptideResultOutputType.BOTH, pointToDilutionMap, config);
                     //lODEstimator.estimateLOD(peptideResults, peptideRecords, PeptideResultOutputType.BOTH, config);
                 }
                 

@@ -104,7 +104,7 @@ public class MRMPlus {
         System.out.println("Estimating MRMPlus QCs...");
         PeptideQCEstimator qcEstimator = new PeptideQCEstimator();
         HashMap<String, LinkedList<PeptideResult>> peptideQCEstimates = 
-                qcEstimator.estimatePeptidesQCs(pepToRecordsMap, config);
+                qcEstimator.estimatePeptidesQCs(pepToRecordsMap, pointToDilutionMap, config);
         
         //Print results
         System.out.println("Printing MRMPlus QC estimates...");
