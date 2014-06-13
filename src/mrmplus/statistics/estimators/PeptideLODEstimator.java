@@ -12,6 +12,7 @@ import mrmplus.PeptideRecord;
 import mrmplus.enums.PeptideResultOutputType;
 import mrmplus.statistics.resultobjects.LimitOfDetection;
 import mrmplus.*;
+import mrmplus.enums.PeptideRecordsType;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
@@ -84,7 +85,10 @@ public class PeptideLODEstimator {
                 int preCurveBlanks = Integer.parseInt(config.get("preCurveBlanks"));
                 LinkedList<PeptideRecord> preFirstCurveBlanks = getPreFirstCurveBlanks(peptideRecords, preCurveBlanks);
                 LimitOfDetection summedLOD;
-                summedLOD = computeLOD(preFirstCurveBlanks);
+                LinkedList<PeptideRecord> summedTransitionsDerivedPeptideRecords = 
+                        sumEachReplicateRunTransitions(preFirstCurveBlanks, 
+                                                           PeptideRecordsType.PRECURVEBLANKS, config);
+                summedLOD = computeLOD(summedTransitionsDerivedPeptideRecords);
                 // update attributes
                 summedLOD.setUsedMinSpikedInConcentration(false);
                 summedLOD.setTransitionID("SUMMED");
@@ -93,7 +97,9 @@ public class PeptideLODEstimator {
                 if(summedLOD.getLimitOfDetection() <= 0){
                     //use standard deviation of signal observed/detected in lowest spiked sample 
                     LinkedList<PeptideRecord> lowestSpikedSampleRecords = getLowestSpikedSampleRecords(peptideRecords);
-                    summedLOD = computeLOD(lowestSpikedSampleRecords);
+                    summedTransitionsDerivedPeptideRecords = 
+                        sumEachReplicateRunTransitions(lowestSpikedSampleRecords, PeptideRecordsType.MINSPIKEDCONCENTRATION, config);
+                    summedLOD = computeLOD(summedTransitionsDerivedPeptideRecords);
                     summedLOD.setUsedMinSpikedInConcentration(true);
                     summedLOD.setTransitionID("SUMMED");
                 }
@@ -182,6 +188,84 @@ public class PeptideLODEstimator {
         }
         
         return hasZero;
+    }
+
+    /*
+     * Method sums each replicate run top transitions' peak area into a summed value
+     * in a PeptideRecord
+     * 
+     * @params preFrstCurveBlanks
+     * @return summedReplicateRunTransitions
+     * 
+     */
+    private LinkedList<PeptideRecord> sumEachReplicateRunTransitions(LinkedList<PeptideRecord> peptideRecords,
+                                                                        PeptideRecordsType pRecType,
+                                                                        HashMap<String,String> config) {
+        //throw new UnsupportedOperationException("Not yet implemented");
+        LinkedList<PeptideRecord> summedReplicateRunTransitions = new LinkedList<PeptideRecord>();
+        switch(pRecType){
+            case PRECURVEBLANKS:
+                //since precurve blanks do not have "Replicate" attribute associated with them,
+                //peptideRecords are mapped to their respective replicateID and summed
+                int preCurveBlanksNumber = Integer.parseInt(config.get("preCurveBlanks"));
+                HashMap<Integer, LinkedList<PeptideRecord>> runToRecordsMap = new HashMap<Integer, LinkedList<PeptideRecord>>();
+                for(PeptideRecord peptideRecord : peptideRecords){
+                    int runOrder = Integer.parseInt(peptideRecord.getRunOrder());
+                    if(runOrder <= preCurveBlanksNumber){
+                        //check record mapping in runToRecordsMap
+                        if(runToRecordsMap.containsKey(runOrder)){
+                            LinkedList<PeptideRecord> mappedRecords = runToRecordsMap.remove(runOrder);
+                            mappedRecords.add(peptideRecord);
+                            runToRecordsMap.put(runOrder, mappedRecords);
+                        }else{
+                            LinkedList<PeptideRecord> mappedRecords = new LinkedList<PeptideRecord>();
+                            mappedRecords.add(peptideRecord);
+                            runToRecordsMap.put(runOrder, mappedRecords);
+                        }
+                    }
+                }
+                //sum peptideRecords for each preCurveBlankNumber
+                PeptideRecordsSummer prs = new PeptideRecordsSummer();
+                Set<Integer> preCurveNumbers = runToRecordsMap.keySet();
+                for(int preCurveNumber : preCurveNumbers){
+                    LinkedList<PeptideRecord> preCurveNumberMappedBlanks = runToRecordsMap.get(preCurveNumber);
+                    PeptideRecord preCurveNumberSummedPeptideRecord = prs.sumPeptideRecords(preCurveNumberMappedBlanks);
+                    //update other summed Peptide attributes...
+                    //...
+                    summedReplicateRunTransitions.add(preCurveNumberSummedPeptideRecord);
+                }              
+                break;
+                
+            case MINSPIKEDCONCENTRATION:
+                //map each peptideRecord(s) to replicate type: expectedly, number of 
+                HashMap<String, LinkedList<PeptideRecord>> replicateToRecordsMap = new HashMap<String, LinkedList<PeptideRecord>>();
+                for(PeptideRecord minSpikedInConcPeptideRecord : peptideRecords){
+                    String replicateID = minSpikedInConcPeptideRecord.getReplicate();
+                    if(replicateToRecordsMap.containsKey(replicateID)){
+                        LinkedList<PeptideRecord> mappedRecords = replicateToRecordsMap.remove(replicateID);
+                        mappedRecords.add(minSpikedInConcPeptideRecord);
+                        replicateToRecordsMap.put(replicateID, mappedRecords);
+                    }else{
+                        LinkedList<PeptideRecord> mappedRecords = new LinkedList<PeptideRecord>();
+                        mappedRecords.add(minSpikedInConcPeptideRecord);
+                        replicateToRecordsMap.put(replicateID, mappedRecords);
+                    }
+                   
+                }
+                //sum peptideRecords for each replicate
+                PeptideRecordsSummer sprs = new PeptideRecordsSummer();
+                Set<String> replicateIDs = replicateToRecordsMap.keySet();
+                for(String replicateID : replicateIDs){
+                    LinkedList<PeptideRecord> replicateMappedPeptideRecords = replicateToRecordsMap.get(replicateID);
+                    PeptideRecord replicateSummedPeptideRecord = sprs.sumPeptideRecords(replicateMappedPeptideRecords);
+                    //update other summed Peptide attributes...
+                    //...
+                    summedReplicateRunTransitions.add(replicateSummedPeptideRecord);
+                }  
+                break;           
+        }
+        //HashMap<String
+        return summedReplicateRunTransitions;
     }
 
     
