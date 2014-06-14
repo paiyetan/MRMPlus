@@ -13,13 +13,14 @@ import java.util.HashMap;
  */
 public class DilutionFileReader {
     
-    public HashMap<String,Double> readFile(String dilutionFile) throws FileNotFoundException, IOException{
+    public HashMap<String,Double> readFile(String dilutionFile, PrintWriter logWriter) throws FileNotFoundException, IOException{
         HashMap<String,Double> dilution = new HashMap<String,Double>();
         BufferedReader input = new BufferedReader(new FileReader(new File(dilutionFile)));        
 
         int lines_read = 0;
         String line;
-        System.out.println(" Reading experiment's dilution(s)..." );
+        System.out.println(" Reading experiment's dilution(s)...");
+        logWriter.println(" Reading experiment's dilution(s)...");
         
         while ((line = input.readLine()) != null) {
             lines_read++;
@@ -29,7 +30,9 @@ public class DilutionFileReader {
                 double dilution_amount = Double.parseDouble(lineArr[1]);
                 dilution.put(dilution_point, dilution_amount);              
             }
-        }        
+        }
+        
+        logWriter.println("  " + dilution.keySet().size() + " dilution(s) found/performed");
         return dilution;
     }
     

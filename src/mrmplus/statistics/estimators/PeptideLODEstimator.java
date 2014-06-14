@@ -7,6 +7,7 @@ package mrmplus.statistics.estimators;
 import ios.DilutionFileReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Set;
@@ -29,23 +30,30 @@ public class PeptideLODEstimator {
                                                     LinkedList<PeptideRecord> peptideRecords, 
                                                     PeptideResultOutputType peptideResultOutputType,
                                                     HashMap<String, Double> pointToDilutionMap,
-                                                    HashMap<String, String> config) throws FileNotFoundException, IOException {
+                                                    HashMap<String, String> config,
+                                                    PrintWriter logWriter) throws FileNotFoundException, IOException {
         //throw new UnsupportedOperationException("Not yet implemented");
         LinkedList<LimitOfDetection> lods = new LinkedList<LimitOfDetection>();
         switch (peptideResultOutputType){
             
             case TRANSITIONS:
                 //estimate LOD per transition...
+                logWriter.println("    transition(s) associated LOD estimation...");
                 PeptideTransitionToRecordsMapper transToRecordsMapper = new PeptideTransitionToRecordsMapper();
                 HashMap<String, LinkedList<PeptideRecord>> transitionToRecords = 
                         transToRecordsMapper.mapTransitionsToRecords(peptideRecords);
                 Set<String> transitions = transitionToRecords.keySet();
+                logWriter.println("    " + transitions.size() + " transitions found associated with peptide " + 
+                        peptideRecords.getFirst().getPeptideSequence());
                 for(String transition : transitions){
                     //for each transition,
                     LinkedList<PeptideRecord> transitionRecords = transitionToRecords.get(transition);
+                    logWriter.println("     to transition " + transition + ", " + transitionRecords.size() + 
+                                                              " peptide records were mapped...");
                     //getBlanks before the first curve
                     int preCurveBlanks = Integer.parseInt(config.get("preCurveBlanks"));
                     LinkedList<PeptideRecord> preFirstCurveBlanks = getPreFirstCurveBlanks(transitionRecords, preCurveBlanks);
+                    logWriter.println("      " + preFirstCurveBlanks.size() + " pre-first curve blanks");
                     LimitOfDetection transitionLOD;
                     transitionLOD = computeLOD(preFirstCurveBlanks);
                     // update attributes
@@ -54,8 +62,11 @@ public class PeptideLODEstimator {
                     
                     // however, if no detectable signal is observed in blanks... 
                     if(transitionLOD.getLimitOfDetection() <= 0){
+                        logWriter.println("       found no detectable signal in blanks...");
                         //use standard deviation of signal observed/detected in lowest spiked sample 
+                        logWriter.println("       computing LOD in minimum spiked-In sample...");
                         LinkedList<PeptideRecord> lowestSpikedSampleRecords = getLowestSpikedSampleRecords(transitionRecords);
+                        logWriter.println("        " + lowestSpikedSampleRecords.size() + " peptide records found at lowest spiked-in concentration...");
                         transitionLOD = computeLOD(lowestSpikedSampleRecords);
                         transitionLOD.setUsedMinSpikedInConcentration(true);
                         transitionLOD.setTransitionID(transition);
@@ -85,12 +96,17 @@ public class PeptideLODEstimator {
             case SUMMED:
                 // uses all records mapped to peptide irrespective of  
                 //getBlanks before the first curve
+                logWriter.println("    summed-transition(s) associated LOD estimation...");
                 int preCurveBlanks = Integer.parseInt(config.get("preCurveBlanks"));
                 LinkedList<PeptideRecord> preFirstCurveBlanks = getPreFirstCurveBlanks(peptideRecords, preCurveBlanks);
+                logWriter.println("      " + preFirstCurveBlanks.size() + " pre-first curve blanks");
                 LimitOfDetection summedLOD;
                 LinkedList<PeptideRecord> summedTransitionsDerivedPeptideRecords = 
                         sumEachReplicateRunTransitions(preFirstCurveBlanks, 
-                                                           PeptideRecordsType.PRECURVEBLANKS, pointToDilutionMap, config);
+                                                           PeptideRecordsType.PRECURVEBLANKS, 
+                                                               pointToDilutionMap, 
+                                                                   config,
+                                                                       logWriter);
                 summedLOD = computeLOD(summedTransitionsDerivedPeptideRecords);
                 // update attributes
                 summedLOD.setUsedMinSpikedInConcentration(false);
@@ -102,27 +118,35 @@ public class PeptideLODEstimator {
                     LinkedList<PeptideRecord> lowestSpikedSampleRecords = getLowestSpikedSampleRecords(peptideRecords);
                     summedTransitionsDerivedPeptideRecords = 
                         sumEachReplicateRunTransitions(lowestSpikedSampleRecords, 
-                                                PeptideRecordsType.MINSPIKEDCONCENTRATION, pointToDilutionMap, config);
+                                                        PeptideRecordsType.MINSPIKEDCONCENTRATION, 
+                                                            pointToDilutionMap, 
+                                                                config,
+                                                                    logWriter);
                     summedLOD = computeLOD(summedTransitionsDerivedPeptideRecords);
                     summedLOD.setUsedMinSpikedInConcentration(true);
                     summedLOD.setTransitionID("SUMMED");
                 }
                 
                 lods.add(summedLOD);
-
                 break;
             
             default: // BOTH
                 // estimate LOD per transition...
                 LinkedList<LimitOfDetection> transitionsLODs = 
-                        estimateLOD(peptideRecords, PeptideResultOutputType.TRANSITIONS, pointToDilutionMap, config);
+                        estimateLOD(peptideRecords, 
+                                        PeptideResultOutputType.TRANSITIONS, 
+                                            pointToDilutionMap, 
+                                                config, logWriter);
                 // add estimated transition-lods to lods
                 for(LimitOfDetection transitionLOD : transitionsLODs){
                     lods.add(transitionLOD);
                 }                
                 // estimate summed lod...
                 LinkedList<LimitOfDetection> summedLODs = 
-                        estimateLOD(peptideRecords, PeptideResultOutputType.SUMMED, pointToDilutionMap, config);
+                        estimateLOD(peptideRecords, 
+                                        PeptideResultOutputType.SUMMED, 
+                                            pointToDilutionMap, 
+                                                config, logWriter);
                 // add summed-lod to lods 
                 for(LimitOfDetection sumLOD : summedLODs){
                     lods.add(sumLOD);
@@ -205,13 +229,15 @@ public class PeptideLODEstimator {
     private LinkedList<PeptideRecord> sumEachReplicateRunTransitions(LinkedList<PeptideRecord> peptideRecords,
                                                                         PeptideRecordsType pRecType,
                                                                         HashMap<String, Double> pointToDilutionMap,
-                                                                        HashMap<String,String> config) throws FileNotFoundException, IOException {
+                                                                        HashMap<String,String> config,
+                                                                        PrintWriter logWriter) throws FileNotFoundException, IOException {
         //throw new UnsupportedOperationException("Not yet implemented");
         LinkedList<PeptideRecord> summedReplicateRunTransitions = new LinkedList<PeptideRecord>();
         switch(pRecType){
             case PRECURVEBLANKS:
                 //since precurve blanks do not have "Replicate" attribute associated with them,
                 //peptideRecords are mapped to their respective replicateID and summed
+                logWriter.println("       summing pre-curve blanks...");
                 int preCurveBlanksNumber = Integer.parseInt(config.get("preCurveBlanks"));
                 HashMap<Integer, LinkedList<PeptideRecord>> runToRecordsMap = new HashMap<Integer, LinkedList<PeptideRecord>>();
                 for(PeptideRecord peptideRecord : peptideRecords){
@@ -234,6 +260,8 @@ public class PeptideLODEstimator {
                 Set<Integer> preCurveNumbers = runToRecordsMap.keySet();
                 for(int preCurveNumber : preCurveNumbers){
                     LinkedList<PeptideRecord> preCurveNumberMappedBlanks = runToRecordsMap.get(preCurveNumber);
+                    logWriter.println("        " + preCurveNumberMappedBlanks.size() + 
+                            " peptide records map to precurve run number " + preCurveNumber);               
                     PeptideRecord preCurveNumberSummedPeptideRecord = prs.sumPeptideRecords(preCurveNumberMappedBlanks);
                     //update other summed Peptide attributes...
                     //...
@@ -243,7 +271,9 @@ public class PeptideLODEstimator {
                 
             case MINSPIKEDCONCENTRATION:
                 //map each peptideRecord(s) to replicate type: expectedly, number of 
+                logWriter.println("       summing minimum spikedIn concentration transitions...");
                 HashMap<String, LinkedList<PeptideRecord>> replicateToRecordsMap = new HashMap<String, LinkedList<PeptideRecord>>();
+                logWriter.println("         mapping replicate Id to peptide records...");
                 for(PeptideRecord minSpikedInConcPeptideRecord : peptideRecords){
                     String replicateID = minSpikedInConcPeptideRecord.getReplicate();
                     if(replicateToRecordsMap.containsKey(replicateID)){
@@ -260,12 +290,16 @@ public class PeptideLODEstimator {
                 //sum peptideRecords for each replicate
                 PeptideRecordsSummer sprs = new PeptideRecordsSummer();
                 Set<String> replicateIDs = replicateToRecordsMap.keySet();
+                logWriter.println("         " + replicateIDs.size() + " replicate Id's found...");
                 for(String replicateID : replicateIDs){
                     LinkedList<PeptideRecord> replicateMappedPeptideRecords = replicateToRecordsMap.get(replicateID);
+                    logWriter.println("          " + replicateMappedPeptideRecords.size() + " peptide records mapped to " +
+                                                        replicateID + " replicate Id");
                     PeptideRecord replicateSummedPeptideRecord = sprs.sumPeptideRecords(replicateMappedPeptideRecords);
                     //update other summed Peptide attributes...
                     //set dilution
                     replicateSummedPeptideRecord.setDilution(pointToDilutionMap.get("Point_1")); //minimum_spikedIn concentration.
+                    replicateSummedPeptideRecord.setCalibrationPoint("Point_1");
                     //...
                     summedReplicateRunTransitions.add(replicateSummedPeptideRecord);
                 }  

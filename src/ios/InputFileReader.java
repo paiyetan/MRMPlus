@@ -35,7 +35,8 @@ public class InputFileReader {
      * 
      */
     
-    public LinkedList<PeptideRecord> readInputFile(String inputFile, HashMap<String, String> config) throws FileNotFoundException, IOException{
+    public LinkedList<PeptideRecord> readInputFile(String inputFile, HashMap<String, String> config,
+                                                        PrintWriter logWriter) throws FileNotFoundException, IOException{
         LinkedList<PeptideRecord> peptideRecords = new LinkedList<PeptideRecord>();
         BufferedReader input = new BufferedReader(new FileReader(new File(inputFile)));        
 
@@ -43,9 +44,9 @@ public class InputFileReader {
         String line;
         FileAttributeIndex[] fileAttrIndeces = null;
         int rowIndex = 0;
-        int dataRows = computeDataRows(config);
-        System.out.println(" Reading " + dataRows + " data records of peptides monitored..." );
-        
+        int dataRows = computeDataRows(config, logWriter);
+        System.out.println(" Reading " + dataRows + " data records of peptides to evaluate..." );
+        logWriter.println(" Reading " + dataRows + " data records of peptides to evaluate...");
         while ((line = input.readLine()) != null) {
             lines_read++;
             if (lines_read == 1){
@@ -80,15 +81,18 @@ public class InputFileReader {
                                                                 lightProductMz, lightRetentionTime, lightArea,
                                                                     heavyPrecursorMz, heavyProductMz, heavyRetentionTime,
                                                                         heavyArea));
-                    if((rowIndex % 500) == 0)
+                    if((rowIndex % 500) == 0){
                         System.out.println("  " + rowIndex + " peptide records read...");
+                        logWriter.println("  " + rowIndex + " peptide records read...");
+                    }    
                 }
             }
         }
+        logWriter.println("  " + peptideRecords.size() + " peptide records read...");
         return peptideRecords;
     }  
 
-    private int computeDataRows(HashMap<String, String> config) {
+    private int computeDataRows(HashMap<String, String> config, PrintWriter log) {
         //throw new UnsupportedOperationException("Not yet implemented");
         int dataRows = 0;
         /*
@@ -110,6 +114,13 @@ public class InputFileReader {
         System.out.println(" Number of Blanks: " + totalBlanks);
         System.out.println(" Number of Replicates performed: " + replicates);
         System.out.println(" Number of Serial Dilutions: " + serialDilutions);
+        
+        //log info...
+        log.println(" Peptides Monitored: " + peptidesMonitored);
+        log.println(" Number of Transtions/peptide: " + transitions);
+        log.println(" Number of Blanks: " + totalBlanks);
+        log.println(" Number of Replicates performed: " + replicates);
+        log.println(" Number of Serial Dilutions: " + serialDilutions);
         // compute data rows
         dataRows = (((serialDilutions * replicates) + totalBlanks) * transitions * peptidesMonitored);
         

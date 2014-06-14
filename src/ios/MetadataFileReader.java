@@ -22,14 +22,14 @@ public class MetadataFileReader {
         private String CalibrationPoint;
 
      */
-    public LinkedList<MRMRunMeta> readFile(String metadaFile) throws FileNotFoundException, IOException{
+    public LinkedList<MRMRunMeta> readFile(String metadaFile, PrintWriter log) throws FileNotFoundException, IOException{
         LinkedList<MRMRunMeta> metaInfo = new LinkedList<MRMRunMeta>();
         BufferedReader input = new BufferedReader(new FileReader(new File(metadaFile)));        
 
         int lines_read = 0;
         String line;
         System.out.println(" Reading experiment's metadata information..." );
-        
+        log.println(" Reading experiment's metadata information...");
         while ((line = input.readLine()) != null) {
             lines_read++;
             if (lines_read > 1){
